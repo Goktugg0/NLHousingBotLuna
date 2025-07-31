@@ -1,9 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 
-BOT_TOKEN = ""
-CHAT_ID = ""
+BOT_TOKEN = "7826512571:AAGDi2IP_K0ccQLMKLGkxQZzW8iYDIa-GAM"
+CHAT_ID = "7501622399"
 FILTERED_URL = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=prijs%2B&locatie=Eindhoven-Nederland%2B-%2BNoord-Brabant"
+HOUSING_URL = "https://plaza.newnewnew.space/en/availables-places/living-place/details/"
 CHECK_INTERVAL = 60  # seconds
 LAST_HASH = None
 
@@ -20,12 +21,14 @@ def send_telegram_message():
     telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': CHAT_ID,
-        'text': "HI"
+        'text': FILTERED_URL
     }
     try:
         requests.post(telegram_url, data=payload)
     except Exception as e:
         print(f"Error sending message: {e}")
+
+
 send_telegram_message()
 fetch_page_content(FILTERED_URL)
 
