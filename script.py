@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
-BOT_TOKEN = "7826512571:AAGDi2IP_K0ccQLMKLGkxQZzW8iYDIa-GAM"
-CHAT_ID = "7501622399"
+BOT_TOKEN = ""
+CHAT_ID = ""
 FILTERED_URL = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=prijs%2B&locatie=Eindhoven-Nederland%2B-%2BNoord-Brabant"
 HOUSING_URL = "https://plaza.newnewnew.space/en/availables-places/living-place/details/"
 CHECK_INTERVAL = 60  # seconds
