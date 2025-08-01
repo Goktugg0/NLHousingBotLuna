@@ -10,7 +10,7 @@ import time
 
 BOT_TOKEN = ""
 CHAT_ID = ""
-FILTERED_URL = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=prijs%2B&locatie=Eindhoven-Nederland%2B-%2BNoord-Brabant"
+FILTERED_URL = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=publicatiedatum-&locatie=Eindhoven-Nederland%2B-%2BNoord-Brabant"
 HOUSING_URL = "https://plaza.newnewnew.space/en/availables-places/living-place/details/"
 CHECK_INTERVAL = 60  # seconds
 LAST_HASH = None
@@ -26,18 +26,47 @@ def fetch_page_content(url):
 
         driver = webdriver.Chrome(options=options)
         driver.get(url)
-        time.sleep(5)  # Wait for JavaScript to render
+        time.sleep(2)  # Wait for JavaScript to render
         soup = BeautifulSoup(driver.page_source, "html.parser")
         driver.quit()
     except Exception as e:
         print(f"Error fetching/parsing page: {e}")
-        return None
+        return None 
     return soup
 
 def parse_housing_data(soup):
-    houses  = soup.select("section.list-item")
-    print(houses)  # Print the housing data for debugging
+    listings  = soup.select("section.list-item")
+    houses = []
+    for idx, listing in enumerate(listings, 1):
+        # Link to listing
+        link_tag = listing.select_one("a[href]")
+        #print(link_tag)
+        link = link_tag["href"] if link_tag else None
 
+        alternative_name_index  = link_tag["href"].find("details/")
+
+        # Name of the Listing
+        img_tag = listing.select_one("img[alt]")
+        #print(img_tag)
+        title = img_tag["alt"] if img_tag and img_tag.has_attr("alt") else (
+            link_tag["href"][alternative_name_index:] if link_tag else "No title found"
+        )
+
+        # Price
+        price_tag = listing.select_one("span.prijs.ng-binding.ng-scope")
+        price = price_tag.get_text(strip=True) if price_tag else "No price found"
+
+        houses.append({
+            "title": title,
+            "link": link,
+            "price": price,
+        })
+
+        print(f"Listing #{idx}")
+        print(f"Title: {title}")
+        print(f"Link: {link}")
+        print(f"Price: {price}")
+        print("-" * 40)
 
 
 def send_telegram_message():
