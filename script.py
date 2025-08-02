@@ -12,8 +12,19 @@ BOT_TOKEN = ""
 CHAT_ID = ""
 FILTERED_URL = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=publicatiedatum-&locatie=Eindhoven-Nederland%2B-%2BNoord-Brabant"
 CHECK_INTERVAL = 60  # seconds
-LAST_HASH = None
 DIV_HOUSING_SECTION = "section.list-item"
+
+HASH_FILE = "lasthash.json"
+
+def load_last_hash():
+    if os.path.exists(HASH_FILE):
+        with open(HASH_FILE, "r") as f:
+            return json.load(f)
+    return []
+
+def save_last_hash(houses):
+    with open(HASH_FILE, "w") as f:
+        json.dump(houses, f)
 
 
 def fetch_page_content(url):
@@ -84,10 +95,26 @@ def send_telegram_message(adjusted_message):
 
 
 def main():
-    soup = fetch_page_content(FILTERED_URL)
-    all_houses = parse_housing_data(soup)
-    msg  = adjust_message(all_houses)
-    send_telegram_message(msg)
+    while True:
+        LAST_HASH = load_last_hash()
+
+        soup = fetch_page_content(FILTERED_URL)
+        current_houses = parse_housing_data(soup)
+
+        current_links = {h["Link"] for h in current_houses}
+        last_links = {h["Link"] for h in LAST_HASH}
+
+        new_links = current_links - last_links
+
+        if new_links:
+            for house in current_houses:
+                if house["Link"] in new_links:
+                    print("NEW Houses")
+                    msg  = adjust_message(house)
+                    send_telegram_message(msg)
+        else:
+            print("No new housing")
+        save_last_hash(current_houses)
 
 if __name__ == "__main__":
     main()
