@@ -57,19 +57,17 @@ def parse_housing_data(soup):
 
         houses.append({
             "Title": title,
+            "Link": link,
             "Price": price,
-            "Link": link, 
         })
     return houses
 
-def adjust_message(houses):
-    output = ""
-    for house in houses:
-        for name, info in house.items():
-            if name == "Link":
-                output += f"Link: [Click here]({info})\n"
-            else:
-                output += name + ": " + info + "\n"
+def adjust_message(house):
+    for name, info in house.items():
+        if name == "Link":
+            output += name + ": " + f'"https://plaza.newnewnew.space/{info}"\n'
+        else:
+            output += name + ": " + info + "\n"
     return output
 
 def send_telegram_message(adjusted_message):
