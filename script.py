@@ -11,10 +11,9 @@ import time
 BOT_TOKEN = ""
 CHAT_ID = ""
 FILTERED_URL = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=publicatiedatum-&locatie=Eindhoven-Nederland%2B-%2BNoord-Brabant"
-HOUSING_URL = "https://plaza.newnewnew.space/en/availables-places/living-place/details/"
 CHECK_INTERVAL = 60  # seconds
 LAST_HASH = None
-DIV_CLASS = 'ng-scope object-list-items-container'
+DIV_HOUSING_SECTION = "section.list-item"
 
 
 def fetch_page_content(url):
@@ -35,9 +34,9 @@ def fetch_page_content(url):
     return soup
 
 def parse_housing_data(soup):
-    listings  = soup.select("section.list-item")
+    listings  = soup.select(DIV_HOUSING_SECTION)
     houses = []
-    for idx, listing in enumerate(listings, 1):
+    for _, listing in enumerate(listings, 1):
         # Link to listing
         link_tag = listing.select_one("a[href]")
         #print(link_tag)
@@ -57,23 +56,28 @@ def parse_housing_data(soup):
         price = price_tag.get_text(strip=True) if price_tag else "No price found"
 
         houses.append({
-            "title": title,
-            "link": link,
-            "price": price,
+            "Title": title,
+            "Price": price,
+            "Link": link, 
         })
+    return houses
 
-        print(f"Listing #{idx}")
-        print(f"Title: {title}")
-        print(f"Link: {link}")
-        print(f"Price: {price}")
-        print("-" * 40)
+def adjust_message(houses):
+    output = ""
+    for house in houses:
+        for name, info in house.items():
+            if name == "Link":
+                output += f"Link: [Click here]({info})\n"
+            else:
+                output += name + ": " + info + "\n"
+    return output
 
-
-def send_telegram_message():
+def send_telegram_message(adjusted_message):
     telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': CHAT_ID,
-        'text': FILTERED_URL
+        'text': adjusted_message,
+        'parse_mode': 'Markdown'
     }
     try:
         requests.post(telegram_url, data=payload)
@@ -82,9 +86,10 @@ def send_telegram_message():
 
 
 def main():
-    #send_telegram_message()
     soup = fetch_page_content(FILTERED_URL)
-    parse_housing_data(soup)
+    all_houses = parse_housing_data(soup)
+    msg  = adjust_message(all_houses)
+    send_telegram_message(msg)
 
 if __name__ == "__main__":
     main()
