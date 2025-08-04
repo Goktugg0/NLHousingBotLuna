@@ -74,6 +74,7 @@ def parse_housing_data(soup):
     return houses
 
 def adjust_message(house):
+    output = ""
     for name, info in house.items():
         if name == "Link":
             output += name + ": " + f'"https://plaza.newnewnew.space/{info}"\n'
@@ -113,8 +114,7 @@ def main():
                     msg  = adjust_message(house)
                     send_telegram_message(msg)
         else:
-            print("No new housing")
-        save_last_hash(current_houses)
+            save_last_hash(current_houses)
 
 if __name__ == "__main__":
     main()
