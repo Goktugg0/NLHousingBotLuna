@@ -11,7 +11,7 @@ import time
 BOT_TOKEN = ""
 CHAT_ID = ""
 FILTERED_URL = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=publicatiedatum-&locatie=Eindhoven-Nederland%2B-%2BNoord-Brabant"
-CHECK_INTERVAL = 60  # seconds
+CHECK_INTERVAL = 5  # seconds
 DIV_HOUSING_SECTION = "section.list-item"
 
 HASH_FILE = "lasthash.json"
@@ -36,7 +36,7 @@ def fetch_page_content(url):
 
         driver = webdriver.Chrome(options=options)
         driver.get(url)
-        time.sleep(2)  # Wait for JavaScript to render
+        time.sleep(CHECK_INTERVAL)  # Wait for JavaScript to render
         soup = BeautifulSoup(driver.page_source, "html.parser")
         driver.quit()
     except Exception as e:
