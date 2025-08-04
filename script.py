@@ -96,24 +96,26 @@ def send_telegram_message(adjusted_message):
 
 
 def main():
-    while True:
-        LAST_HASH = load_last_hash()
+    try:
+        while True:
+            LAST_HASH = load_last_hash()
 
-        soup = fetch_page_content(FILTERED_URL)
-        current_houses = parse_housing_data(soup)
+            soup = fetch_page_content(FILTERED_URL)
+            current_houses = parse_housing_data(soup)
 
-        current_links = {h["Link"] for h in current_houses}
-        last_links = {h["Link"] for h in LAST_HASH}
+            current_links = {h["Link"] for h in current_houses}
+            last_links = {h["Link"] for h in LAST_HASH}
 
-        new_links = current_links - last_links
+            new_links = current_links - last_links
 
-        if new_links:
-            save_last_hash(current_houses)
-            for house in current_houses:
-                if house["Link"] in new_links:
-                    print("NEW Houses")
-                    msg  = adjust_message(house)
-                    send_telegram_message(msg)
+            if new_links:
+                save_last_hash(current_houses)
+                for house in current_houses:
+                    if house["Link"] in new_links:
+                        msg  = adjust_message(house)
+                        send_telegram_message(msg)
+    except KeyboardInterrupt:
+        print("Stopped by user")
 
 if __name__ == "__main__":
     main()
