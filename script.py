@@ -1,19 +1,28 @@
+# imports
+import json
+import os
 import time
 import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-import json
-import os
-import time
 
-BOT_TOKEN = ""
-CHAT_ID = ""
-FILTERED_URL = "https://plaza.newnewnew.space/en/availables-places/living-place#?gesorteerd-op=publicatiedatum-&locatie=Eindhoven-Nederland%2B-%2BNoord-Brabant"
+#BOT TOKEN to access it safely instead of hardcoding
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
+
+# Chat ID to access it safely instead of hardcoding
+CHAT_ID = os.environ.get("CHAT_ID")
+
+# websites link that we use for scraping
+FILTERED_URL = open("siteLink.txt", "r", encoding="utf-8").read()
+
+# The time interval between every check
 CHECK_INTERVAL = 5  # seconds
+
+# The section that all of the housing ads are listed
 DIV_HOUSING_SECTION = "section.list-item"
 
+# The hash file that we save for each previous housing listings
 HASH_FILE = "lasthash.json"
 
 def load_last_hash():
@@ -41,7 +50,7 @@ def fetch_page_content(url):
         driver.quit()
     except Exception as e:
         print(f"Error fetching/parsing page: {e}")
-        return None 
+        return None
     return soup
 
 def parse_housing_data(soup):
