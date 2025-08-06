@@ -1,4 +1,4 @@
-# imports
+# Imports
 import json
 import os
 import time
@@ -7,37 +7,23 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
-#BOT TOKEN to access it safely instead of hardcoding
+# Environment variables (for security)
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
-
-# Chat ID to access it safely instead of hardcoding
 CHAT_ID = os.environ.get("CHAT_ID")
 
-# websites link that we use for scraping
-FILTERED_URL = open("siteLink.txt", "r", encoding="utf-8").read()
+# Constants
+CHECK_INTERVAL = 5  # seconds between each page check
+HOUSING_SECTION = "section.list-item" # The section that contains all of the houses
+HASH_FILE = "lasthash.json" # The hash file to be written
 
-#SPECIFIC_HOUSING_LINK_START = "https://plaza.newnewnew.space/"
-
-# The time interval between every check
-CHECK_INTERVAL = 5  # seconds
-
-# The section that all of the housing ads are listed
-DIV_HOUSING_SECTION = "section.list-item"
-
-# The hash file that we save for each previous housing listings
-HASH_FILE = "lasthash.json"
+# Load URL from file allowing variability
+with open("siteLink.txt", "r", encoding="utf-8") as f:
+    SITE_URL_WITH_FILTER = f.read()
 
 def load_last_hash():
     """
-    Loads the last saved hash data from a JSON file.
-
-    Returns:
-        list: A list of hash entries loaded from HASH_FILE if it exists;
-              otherwise, returns an empty list.
-
-    Notes:
-        - Expects `HASH_FILE` to be a valid file path (string) defined elsewhere.
-        - The file should contain a JSON-encoded list.
+    Load the last saved hash data from a JSON file.
+    Return empty if doesn't exists.
     """
     if os.path.exists(HASH_FILE):
         with open(HASH_FILE, "r") as f:
@@ -45,67 +31,54 @@ def load_last_hash():
     return []
 
 def save_last_hash(houses):
-    """
-    Saves the last fetched housing data to a JSON file.
-
-    Args:
-        houses (list): The list of housing adds that will be written to JSON file,
-            as the style of dictionary.
-
-    Notes:
-        - If HASH_FILE does not exist, it will be created automatically.
-        - The file content will be overwritten on each save.
-    """
+    """Save the latest housing data to a JSON file."""
     with open(HASH_FILE, "w") as f:
         json.dump(houses, f)
 
 def fetch_page_content(url):
-    """_summary_
+    """Fetch and parse HTML content from a webpage using a headless browser."""
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
 
-    Args:
-        url (string): _description_
-
-    Returns:
-        BeautifulSoup or None: _description_
-    """ 
+    driver = webdriver.Chrome(options=options)
     try:
-        options = Options()
-        options.add_argument("--headless")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-
-        driver = webdriver.Chrome(options=options)
         driver.get(url)
-        time.sleep(CHECK_INTERVAL)  # Wait for JavaScript to render
-        soup = BeautifulSoup(driver.page_source, "html.parser")
-        driver.quit()
+        time.sleep(CHECK_INTERVAL)  # Allow time for JS to render
+        soup = BeautifulSoup(driver.page_source, "html.parser") # Parse the website
     except Exception as e:
         print(f"Error fetching/parsing page: {e}")
         return None
+    finally:
+        driver.quit() # Quits the driver in any case
+
     return soup
 
 def parse_housing_data(soup):
-    listings  = soup.select(DIV_HOUSING_SECTION)
+    """Extract housing listings from parsed HTML."""
+    listings = soup.select(HOUSING_SECTION) # Selects the houses with CSS selector.
     houses = []
+
     for listing in listings:
-        # Link to listing
+        # Getting the link of the website
         link_tag = listing.select_one("a[href]")
-        #print(link_tag)
         link = link_tag["href"] if link_tag else None
 
         alternative_name_index  = link_tag["href"].find("details/")
 
-        # Name of the Listing
+        # Extract the name of the listing
         img_tag = listing.select_one("img[alt]")
-        #print(img_tag)
+        # If no title is found get the data from the link and put it as name
         title = img_tag["alt"] if img_tag and img_tag.has_attr("alt") else (
             link_tag["href"][alternative_name_index:] if link_tag else "No title found"
         )
 
-        # Price
+        # Extract Price
         price_tag = listing.select_one("span.prijs.ng-binding.ng-scope")
         price = price_tag.get_text(strip=True) if price_tag else "No price found"
 
+        # Add to the array as dictionary for each house.
         houses.append({
             "Title": title,
             "Link": link,
@@ -114,7 +87,7 @@ def parse_housing_data(soup):
     return houses
 
 def adjust_message(house):
-    output = "LUNA CIKTI ALOOOO \n"
+    output = "A new housing is added! \n"
     for name, info in house.items():
         if name == "Link":
             output += name + ": " + f'"https://plaza.newnewnew.space/{info}"\n'
@@ -136,24 +109,33 @@ def send_telegram_message(adjusted_message):
 
 
 def main():
+    """Main loop to check for new listings and send messages via Telegram Bot."""
     try:
         while True:
-            LAST_HASH = load_last_hash()
+            last_hash = load_last_hash()
 
-            soup = fetch_page_content(FILTERED_URL)
+            soup = fetch_page_content(SITE_URL_WITH_FILTER)
+            if not soup:
+                print("Failed to fetch page content.")
+                time.sleep(CHECK_INTERVAL)
+                continue
+
             current_houses = parse_housing_data(soup)
 
             current_links = {h["Link"] for h in current_houses}
-            last_links = {h["Link"] for h in LAST_HASH}
+            last_links = {h["Link"] for h in last_hash}
 
-            new_links = current_links - last_links
+            new_links = current_links - last_links # Finds only the new links
 
-            if new_links:
+            if new_links: # No messages if a housing is removed
                 save_last_hash(current_houses)
                 for house in current_houses:
                     if house["Link"] in new_links:
-                        msg  = adjust_message(house)
-                        send_telegram_message(msg)
+                        message  = adjust_message(house)
+                        send_telegram_message(message)
+
+            time.sleep(CHECK_INTERVAL)
+
     except KeyboardInterrupt:
         print("Stopped by user")
 
