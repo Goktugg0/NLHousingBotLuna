@@ -16,6 +16,8 @@ CHAT_ID = os.environ.get("CHAT_ID")
 # websites link that we use for scraping
 FILTERED_URL = open("siteLink.txt", "r", encoding="utf-8").read()
 
+#SPECIFIC_HOUSING_LINK_START = "https://plaza.newnewnew.space/"
+
 # The time interval between every check
 CHECK_INTERVAL = 5  # seconds
 
@@ -26,17 +28,46 @@ DIV_HOUSING_SECTION = "section.list-item"
 HASH_FILE = "lasthash.json"
 
 def load_last_hash():
+    """
+    Loads the last saved hash data from a JSON file.
+
+    Returns:
+        list: A list of hash entries loaded from HASH_FILE if it exists;
+              otherwise, returns an empty list.
+
+    Notes:
+        - Expects `HASH_FILE` to be a valid file path (string) defined elsewhere.
+        - The file should contain a JSON-encoded list.
+    """
     if os.path.exists(HASH_FILE):
         with open(HASH_FILE, "r") as f:
             return json.load(f)
     return []
 
 def save_last_hash(houses):
+    """
+    Saves the last fetched housing data to a JSON file.
+
+    Args:
+        houses (list): The list of housing adds that will be written to JSON file,
+            as the style of dictionary.
+
+    Notes:
+        - If HASH_FILE does not exist, it will be created automatically.
+        - The file content will be overwritten on each save.
+    """
     with open(HASH_FILE, "w") as f:
         json.dump(houses, f)
 
-
 def fetch_page_content(url):
+    """_summary_
+
+    Args:
+        url (string): _description_
+
+    Returns:
+        BeautifulSoup or None: _description_
+    """ 
     try:
         options = Options()
         options.add_argument("--headless")
@@ -56,7 +87,7 @@ def fetch_page_content(url):
 def parse_housing_data(soup):
     listings  = soup.select(DIV_HOUSING_SECTION)
     houses = []
-    for _, listing in enumerate(listings, 1):
+    for listing in listings:
         # Link to listing
         link_tag = listing.select_one("a[href]")
         #print(link_tag)
