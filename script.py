@@ -87,6 +87,7 @@ def parse_housing_data(soup):
     return houses
 
 def adjust_message(house):
+    """It prettifies the message that will be sent via bot."""
     output = "A new housing is added! \n"
     for name, info in house.items():
         if name == "Link":
@@ -96,6 +97,7 @@ def adjust_message(house):
     return output
 
 def send_telegram_message(adjusted_message):
+    """Receive the prettified message and sends it to the user with library requests."""
     telegram_url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
     payload = {
         'chat_id': CHAT_ID,
