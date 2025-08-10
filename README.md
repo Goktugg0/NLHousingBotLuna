@@ -1,6 +1,11 @@
 # NLHousingBotLuna
 A Python script that automatically monitors a housing listings on NewnewPlaza for new properties and sends notifications via a TelegramBot when there is a new house listing.
 
+## Demo
+Here’s the bot in action:
+
+![Demo](./demo.gif)
+
 ## Features
 
 - Fetches housing listings from a given URL (see siteLink.txt).
