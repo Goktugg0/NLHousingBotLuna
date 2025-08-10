@@ -135,6 +135,8 @@ def main():
                     if house["Link"] in new_links:
                         message  = adjust_message(house)
                         send_telegram_message(message)
+            else:
+                print("No new housing.")
 
             time.sleep(CHECK_INTERVAL)
 
