@@ -12,7 +12,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN")
 CHAT_ID = os.environ.get("CHAT_ID")
 
 # Constants
-CHECK_INTERVAL = 5  # seconds between each page check
+CHECK_INTERVAL = 60  # seconds between each page check
 HOUSING_SECTION = "section.list-item" # The section that contains all of the houses
 HASH_FILE = "lasthash.json" # The hash file to be written
 
