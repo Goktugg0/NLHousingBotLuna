@@ -8,7 +8,7 @@ Here’s the bot in action:
 
 ## Features
 
-- Fetches housing listings from a given URL (see siteLink.txt).
+- Fetches housing listings in every 60 seconds from a given URL (see siteLink.txt).
 - Uses Selenium (headless Chrome) to load and parse dynamic content.
 - Detects only **newly added** listings.
 - Sends notifications to Telegram via bot.
